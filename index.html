@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TODO List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f9f9f9;
+    }
+    h1 {
+      color: #333;
+    }
+    #new-item {
+      padding: 8px;
+      width: 250px;
+      margin-bottom: 10px;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      margin: 10px 0;
+      padding: 8px;
+      background: #fff;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .todo-text {
+      flex-grow: 1;
+      margin-left: 10px;
+    }
+    .completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+    button {
+      border-radius: 4px;
+      font-size: 18px;
+      cursor: pointer;
+      border: none;
+    }
+    .x-button {
+      color: #e74c3c;
+      background: none;
+    }
+    .x-button:hover {
+      background-color: lightgrey;
+      color: #c0392b;
+    }
+    #clear-button {
+      margin-top: 20px;
+      color: white;
+      font-size: 14px;
+      padding: 6px 12px;
+      background-color: #e74c3c;
+    }
+    #clear-button:hover {
+      background-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+  <h1>TODO List</h1>
+
+
+  <ul id="todo-list"></ul>
+  <input type="text" id="new-item" placeholder="Add new task" />
+
+  <button id="clear-button" onclick="clearAll()">Clear All</button>
+
+  <script>
+    const input = document.getElementById('new-item');
+    const list = document.getElementById('todo-list');
+    const STORAGE_KEY = 'todoList';
+
+    function saveList() {
+      const items = [];
+      list.querySelectorAll('li').forEach(li => {
+        const text = li.querySelector('.todo-text').textContent;
+        const completed = li.querySelector('input[type="checkbox"]').checked;
+        items.push({ text, completed });
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function loadList() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      const items = JSON.parse(saved);
+      items.forEach(item => addItemToDOM(item.text, item.completed));
+    }
+
+    function addItemToDOM(text, completed = false) {
+      const li = document.createElement('li');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = completed;
+
+      const span = document.createElement('span');
+      span.className = 'todo-text';
+      span.textContent = text;
+      if (completed) span.classList.add('completed');
+
+      checkbox.addEventListener('change', () => {
+        span.classList.toggle('completed');
+        saveList();
+      });
+
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = '×';
+      removeBtn.className = 'x-button'
+      removeBtn.title = 'Remove';
+      removeBtn.onclick = function () {
+        li.remove();
+        saveList();
+      };
+
+      li.appendChild(checkbox);
+      li.appendChild(span);
+      li.appendChild(removeBtn);
+
+      list.appendChild(li);
+    }
+
+    function addItemFromInput() {
+      const text = input.value.trim();
+      if (!text) return;
+      addItemToDOM(text);
+      input.value = '';
+      saveList();
+    }
+
+    function clearAll() {
+      if (confirm("Are you sure you want to clear all tasks?")) {
+        localStorage.removeItem(STORAGE_KEY);
+        list.innerHTML = '';
+      }
+    }
+
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        addItemFromInput();
+      }
+    });
+
+    input.addEventListener('blur', function () {
+      addItemFromInput();
+    });
+
+    // Load the list when page loads
+    loadList();
+  </script>
+</body>
+</html>
